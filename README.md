@@ -1,2 +1,6 @@
 # bcb-pipeline
-ETL pipeline: Banco Central (SGS API) → PostgreSQL, with validation, SQL views, Airflow and CI
+
+ETL pipeline that ingests Banco Central do Brasil time series (SGS API) into PostgreSQL,
+with data validation, SQL transformations, Airflow scheduling and CI.
+
+Work in progress.
