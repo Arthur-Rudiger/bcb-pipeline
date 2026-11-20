@@ -80,11 +80,14 @@ def parse(records: list[dict], series_id: int) -> pd.DataFrame:
     
     raw = pd.DataFrame(records)
     
-    return pd.DataFrame({
+    df = pd.DataFrame({
         "series_id": series_id,
         "ref_date": pd.to_datetime(raw["data"], format="%d/%m/%Y").astype("datetime64[ns]"),
         "value": pd.to_numeric(raw["valor"], errors="coerce"),  # bad values become NaN
     })
+    # Monthly series: SGS returns a month in every window that touches it,
+    # so the month at each window boundary appears twice.
+    return df.drop_duplicates(subset="ref_date", keep="last").reset_index(drop=True)
 
 # Public function: the only one the rest of the pipeline calls
 def fetch_series(series_id: int, start: date, end: date, session=None) -> pd.DataFrame:

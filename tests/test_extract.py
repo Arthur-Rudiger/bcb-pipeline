@@ -76,3 +76,9 @@ def test_long_range_makes_several_requests():
 def test_start_after_end_is_rejected():
     with pytest.raises(ValueError):
         fetch_series(432, date(2026, 2, 1), date(2026, 1, 1), session=FakeSession(FakeResponse()))
+
+def test_monthly_overlap_at_window_edges_is_removed():
+    # the API returns the boundary month in both windows
+    session = FakeSession(FakeResponse(payload=[{"data": "01/12/2004", "valor": "0.86"}]))
+    df = fetch_series(433, date(2000, 1, 1), date(2026, 1, 1), session=session)
+    assert len(df) == 1
