@@ -18,5 +18,25 @@ services:
       retries: 10
     restart: unless-stopped
 
+  airflow:
+    build:
+      context: .
+      dockerfile: docker/airflow.Dockerfile
+    container_name: bcb-airflow
+    profiles: ["airflow"]          # only starts with: docker compose --profile airflow up
+    command: standalone
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Sao_Paulo
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"   # no login: local use only
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "127.0.0.1:8080:8080"
+
 volumes:
   pgdata:
