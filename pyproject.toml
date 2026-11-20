@@ -15,6 +15,9 @@ dependencies = [
 dev  = ["pytest", "ruff"]
 dash = ["streamlit", "plotly"]
 
+[project.scripts]
+bcb-pipeline = "bcb_pipeline.pipeline:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
