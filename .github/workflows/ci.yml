@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bcb
+          POSTGRES_PASSWORD: bcb
+          POSTGRES_DB: bcb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bcb -d bcb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://bcb:bcb@localhost:5432/bcb
+      REQUIRE_DB: "1"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Apply migrations
+        env:
+          PGHOST: localhost
+          PGUSER: bcb
+          PGPASSWORD: bcb
+          PGDATABASE: bcb
+        run: |
+          for f in sql/*.sql; do
+            echo "== $f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      - name: Test
+        run: pytest -v
